@@ -42,6 +42,8 @@ int main() {
 
   /* Père */
 
+  /* Faire un simple pthread à la place d'un gros fork foireux ! */
+  
   if (pid > 0) {
     while (recv(server_socket, buffer, SERVER_BUFFER_SIZE, 0) > 0) {
       printf("%s", buffer);

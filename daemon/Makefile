@@ -1,12 +1,11 @@
 .PHONY: clean
 .SUFFIXES:
 
-
 SERVER = cadid
 CLIENT = cadi
 BINS = $(SERVER) $(CLIENT)
 
-SERVER_OBJFILES = cadid.o
+SERVER_OBJFILES = cadid.o process.o
 CLIENT_OBJFILES = cadi.o
 OBJFILES = $(SERVER_OBJFILES) $(CLIENT_OBJFILES)
 

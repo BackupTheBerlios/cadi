@@ -3,7 +3,6 @@
 
 #define SERVER_BUFFER_SIZE 100
 #define SERVER_PORT        53553
-#define MAX_CLIENT         10
 
 #define MSG_QUIT            0
 #define MSG_ERR             1
@@ -17,5 +16,8 @@ typedef struct {
   struct sockaddr_in address;
 } socketinfo_t;
 
+
+/* Destiné à la suppression sans doute ? */
+#define MAX_CLIENT         10
 
 #endif

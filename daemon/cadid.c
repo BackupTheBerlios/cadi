@@ -13,7 +13,9 @@
 #include <stdarg.h>
 #include <pthread.h>
 #include <limits.h>
+
 #include "cadid.h"
+#include "process.h"
 
 /* Retour de commande client */
 #define RET_OK "OK"
@@ -27,7 +29,8 @@
 /* Misc */
 #define WELCOME_MSG "Welcome on CaDi daemon"
 
-#define MAX_CHAR_MSG  1000 /* Taille des messages maximale */
+#define MAX_CHAR_MSG    1024 /* Taille maximale des messages */
+
 
 #define INT_SIZE sizeof(INT_MAX)
 #define forever for (;;)
@@ -45,6 +48,12 @@ static void VERBOSE(const char *format, ...) {
   }
 }
 
+/**
+ * Renvoie un pointeur sur une châine représentant un entier. Allouée dynamiquement.
+ *
+ * @param nb nombre dont récupérer la représentation en pointeur de char
+ * @return la chaîne représentant nb
+ */
 static char *itoa(const int nb) {
   char *buf = malloc(INT_SIZE + 1);
   sprintf(buf, "%d", nb);
@@ -91,23 +100,7 @@ static int send_failure(const int socket, const char *param) {
 }
 
 
-pid_t create_process(const char *app) {
-  pid_t proc;
 
-  proc = fork();
-
-  /* Père, on renvoie le pid du fils (qui sera le truc exécuté) */
-  if (proc > 0)
-    return proc;
-
-  /* Fils qui se transforme en process que l'utilisateur désire */
-  if (proc == 0) 
-    if (execlp(app, NULL) < 0)
-      exit(EXIT_FAILURE);
-
-  /* Erreur, ne devrait jamais arriver */
-  return 0;
-}
 
 static int server_received(const int client_socket, const char *msg) {
   char *s, token[MAX_CHAR_MSG]; /* Récupérera le 1er mot, ou la liste des paramètres, du message */
@@ -141,24 +134,6 @@ static int server_received(const int client_socket, const char *msg) {
   }
 
   return MSG_UNKNOWN_COMMAND;
-
-  /*
-    if (!strcmp(CMD_CREATE_PROCESS, cmd)) {
-      if (nb_tokens != 2) {
-	send_failure(socket, CMD_CREATE_PROCESS " <application>");
-      } else {	
-	if ((new_proc = create_process(param))) {
-	  sprintf(param, "%d", new_proc);
-	  send_ok(socket, param);
-	} else {
-	  send_failure(socket, NULL);
-	}
-      }
-    }
-
-  }
-
-  return 0;*/
 }
 
 
