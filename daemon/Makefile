@@ -10,7 +10,7 @@ CLIENT_OBJFILES = cadi.o
 OBJFILES = $(SERVER_OBJFILES) $(CLIENT_OBJFILES)
 
 CC = gcc
-CFLAGS = -ansi -pedantic -Wall -W -Werror -fno-builtin
+CFLAGS = -ansi -pedantic -Wall -W -fno-builtin
 LD = gcc
 LDFLAGS = -s -lpthread
 

@@ -6,6 +6,6 @@ Sinon                 : <adresse> = 127.0.0.1
 Se connecter sur <adresse> sur le <port>
 
 Tant que <vrai>
-	Créer un thread : écouter le serveur et afficher les messages qu'ils envoient
+	Créer un thread : écouter le serveur et afficher les messages qu'il envoit
 	Envoyer tout ce que l'utilisateur tape au clavier au serveur
 Fin Tant que

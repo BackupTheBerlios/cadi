@@ -2,7 +2,7 @@
 
 # <port> = port du serveur
 # <adresse> = localhost
-# <signal> = Ctrl+Q
+# <signal> = Ctrl+D
 
 Définir le signal <signal> pour quitter proprement
 
