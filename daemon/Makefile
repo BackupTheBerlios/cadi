@@ -5,14 +5,14 @@ SERVER = cadid
 CLIENT = cadi
 BINS = $(SERVER) $(CLIENT)
 
-SERVER_OBJFILES = cadid.o process.o
-CLIENT_OBJFILES = cadi.o
+SERVER_OBJFILES = cadid.o process.o config.o
+CLIENT_OBJFILES = cadi.o config.o
 OBJFILES = $(SERVER_OBJFILES) $(CLIENT_OBJFILES)
 
 CC = gcc
-CFLAGS = -ansi -pedantic -Wall -W -fno-builtin
+CFLAGS = -std=c99 -pedantic -Wall -W -fno-builtin
 LD = gcc
-LDFLAGS = -s -lpthread
+LDFLAGS = -s
 
 all: $(BINS)
 
