@@ -1,4 +1,4 @@
-.PHONY: clean
+.PHONY: clean mrproper
 .SUFFIXES:
 
 SERVER = cadid
@@ -30,5 +30,9 @@ $(CLIENT): $(CLIENT_OBJFILES)
 
 clean:
 	@rm -f $(OBJFILES)
+	@echo [Clean] $(OBJFILES)
+
+mrproper: clean
 	@rm -f $(BINS)
-	@echo [Clean] $(OBJFILES) $(BINS)
+	@echo [Clean] $(BINS)
+
