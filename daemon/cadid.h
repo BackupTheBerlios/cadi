@@ -1,11 +1,20 @@
 #ifndef CADID_H
 #define CADID_H
 
-#define MESSAGE_BUFFER_SIZE 1024    /* Taille maximale des messages transmis */
-#define MAX_ERR_SIZE        255 /* Taille maximale du message d'erreur */
+#include <netinet/in.h>
 
-#define SERVER_PORT         53553   /* Le port de CaDiD */
+#define SERVER_VERSION "CaDiD v0.1a"
+
+#define MESSAGE_BUFFER_SIZE 1024    /* Taille maximale des messages transmis */
+#define ERR_MAX_SIZE        255 /* Taille maximale du message d'erreur */
+
 #define MAX_CLIENT          1   /* Un seul client peut se connecter (pour l'instant) */
+#define DEFAULT_PORT        53553 /* Port par défaut */
+#define DEFAULT_PORT_STRING "53553" /* Port par défaut sous forme d'une chaîne */
+
+#define CLIENT_PROMPT "# "
+#define SERVER_PROMPT ""
+#define MAX_ARGS 128
 
 /* Type de la commande reçue */
 #define MSG_QUIT            0
@@ -43,7 +52,7 @@
 #define DETAIL_RET_UNKNOWN_PROCESS "PID inconnu"
 
 /* Divers */
-#define WELCOME_MSG "Welcome on CaDi daemon"    /* Quand un client se connecte */
+#define WELCOME_MSG "Welcome on CaDiD"          /* Quand un client se connecte */
 #define VERBOSE_FLAG 1                          /* différent de 0 si on veut du verbose, 0 sinon */
 
 /* Contient les informations sur un socket (son id et sa structure de connection) */
@@ -51,5 +60,7 @@ typedef struct {
     int socket;
     struct sockaddr_in address;
 } socketinfo_t;
+
+void send_basic(const int, const char *);
 
 #endif

@@ -2,21 +2,23 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
+#include <fcntl.h>
+#include <errno.h>
 
 #include "process.h"
+#include "cadid.h"
 
-FILE *fdopen (int fildes, const char *mode);
-
-#define IN  1
-#define OUT 0
+#define WRITE 1
+#define READ  0
 
 /** La structure utilisée en interne pour contenir les infos d'un processus */
 typedef struct {
   pid_t pid;
-  int rc;
+  int ret;
   int in[2];
   int out[2];
 } processinfo_t;
@@ -74,7 +76,8 @@ static processinfo_t *add_process()
     if (proc_index < 0)
         return NULL;
 
-    processes[proc_index].rc = PROCESS_NOT_TERMINATED;
+    processes[proc_index].ret = PROCESS_NOT_TERMINATED;
+
     pipe(processes[proc_index].in);
     pipe(processes[proc_index].out);
 
@@ -103,48 +106,47 @@ void destroy_process(pid_t pid)
     processes[index].pid = 0;
 }
 
-pid_t create_process(const char *app)
+pid_t create_process(const char *prog, char * const args[])
 {
     pid_t proc;
     processinfo_t *procinfo;
 
-    if (app == NULL || (procinfo = add_process()) == NULL)
+    if (prog == NULL || (procinfo = add_process()) == NULL)
         return 0;
 
     proc = fork();
 
-    /* Le serveur (père) */
     if (proc > 0) {
-      if (write(procinfo->in[IN], "Salut", 6) < 0) {
-	perror("write");
-      }
+      close(procinfo->in[READ]);
+      close(procinfo->out[WRITE]);
+      fcntl(procinfo->out[READ], F_SETFL, O_NONBLOCK);
       return procinfo->pid = proc;
     }
     
     /* Le fils, le processus exécuté */
     if (proc == 0) {
-      FILE *f = fdopen(procinfo->in[IN], "r");
+      /*dup2(procinfo->in[READ], STDIN_FILENO);
+      close(procinfo->in[READ]);
+      close(procinfo->in[WRITE]);*/
 
-      if (feof(f)) {
-	puts("eof");
-	fflush(stdout);
-      } else {
-	char *buffer = malloc(10);
-	fgets(buffer, 10, f);
-	buffer[10] = '\0';
-	printf("%s\n", buffer);
-	fflush(stdout);
-      }
-	
-      dup2(procinfo->in[OUT], STDIN_FILENO);
-      
-      if (execlp("tr", "tr", "[:upper:]", "[:lower:]", NULL) < 0)
-	return 0;
+      dup2(procinfo->out[WRITE], STDOUT_FILENO);
+      close(procinfo->out[READ]);
+      close(procinfo->out[WRITE]);
+
+      printf("saluiam\n");
+      printf("loooooool");
+      fflush(stdout);
+
+      /*execlp("tr", "tr", "[:lower:]", "[:upper:]", NULL);*/
+      execvp(prog, args);
+      return 0;
     }
 
-    /* Erreur, ne devrait jamais arriver (99.9%) */
+    /* Erreur, ne devrait jamais arriver (99.9999%) */
+    perror("fork");
     return 0;
 }
+
 
 /**
  * Indique si le processus d'id pid a été crée.
@@ -158,24 +160,42 @@ bool process_exists(pid_t pid) {
 
 void send_input(pid_t pid, const char *input) {
   int index;
+  char *buf;
+
+  if ((index = index_of_process(pid)) < 0)
+    return;
+
+  /* Le TRUC à ne pas oublier !
+     Enfin, ou trouver une autre technique, genre un remplacement barbare des "\n"
+     du SendInput par le vrai '\n', un "<< EOF", etc. */
+  if ((buf = malloc(strlen(input) + 1 + 1)) == NULL) {
+    perror("malloc");
+    return;
+  }
+
+  strcpy(buf, input);
+  strcat(buf, "\n");
+  
+  write(processes[index].in[WRITE], buf, strlen(buf) + 1);
+}
+
+void get_output(int socket, pid_t pid) {
+  static char buffer[STDOUT_BUFFER_SIZE];
+  int index, n;
+  bool must_n = false;
 
   index = index_of_process(pid);
   if (index < 0)
     return;
 
-  write(processes[index].in[IN], input, strlen(input) + 1);
-}
+  while ((n = read(processes[index].out[READ], buffer, sizeof buffer - 1)) > 0) {
+    buffer[n] = '\0';
+    send_basic(socket, buffer);
+    must_n = true;
+  }
 
-char *get_output(pid_t pid) {
-  static char buffer[STDOUT_BUFFER_SIZE];
-  int index, n;
-
-  index = index_of_process(pid);
-  if (index < 0)
-    return NULL;
-
-  n = read(processes[index].out[OUT], buffer, sizeof buffer);
-  return buffer;
+  if (must_n)
+    send_basic(socket, "\n");
 }
 
 int get_return_code(pid_t pid) {
@@ -183,7 +203,7 @@ int get_return_code(pid_t pid) {
 
   index = index_of_process(pid);
   if (index < 0)
-    return PROCESS_NOT_TERMINATED; /* N'arrivera jamais */
+    return PROCESS_NOT_TERMINATED; /* N'arrivera normalement jamais */
 
-  return processes[index].rc;
+  return processes[index].ret;
 }
